@@ -1,0 +1,3 @@
+ <audio id="beep" src="sounds/beep.mp3"></audio>
+<audio id="success" src="sounds/success.mp3"></audio>
+<audio id="error" src="sounds/error.mp3"></audio>
