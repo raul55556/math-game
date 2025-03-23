@@ -1,101 +1,146 @@
-let num1, num2, operador, correctAnswer;
-let pontuacao = 0;
-let chances = 2; // Initial number of chances
-let jogoIniciado = false;
+let pontos = 0;
+let resultado = 0;
+let intervalId;
+let numerosMostrados = 0;
+let sequencia = [];
+let aguardandoResposta = false;
+const TOTAL_NUMEROS = 7;
+let velocidade = 1000; // 1 segundo entre cada número
+let audioEnabled = false;
 
-const problemaDiv = document.getElementById('problema');
-const respostaInput = document.getElementById('resposta');
-const pontuacaoDiv = document.getElementById('pontuacao');
-const startButton = document.getElementById('startButton');
-const chancesDisplay = document.getElementById('chances'); // Get the chances display
-const beepSound = document.getElementById('beep');
-const successSound = document.getElementById('success');
-const errorSound = document.getElementById('error');
-
-function atualizarPontuacao() {
-    pontuacaoDiv.innerText = `Pontos: ${pontuacao}`;
+function gerarNumeroAleatorio(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function gerarProblema() {
-    num1 = Math.floor(Math.random() * 10) + 1;
-    num2 = Math.floor(Math.random() * 10) + 1;
-    operador = ['+', '-', '*'][Math.floor(Math.random() * 3)];
+// Substituir a função inicializarAudio
+async function inicializarAudio() {
+    const beep = document.getElementById('beep');
+    const success = document.getElementById('success');
+    const error = document.getElementById('error');
 
-    problemaDiv.innerText = `${num1} ${operador} ${num2} = ?`;
-
-    switch (operador) {
-        case '+':
-            correctAnswer = num1 + num2;
-            break;
-        case '-':
-            correctAnswer = num1 - num2;
-            break;
-        case '*':
-            correctAnswer = num1 * num2;
-            break;
+    try {
+        await beep.play();
+        beep.pause();
+        beep.currentTime = 0;
+        audioEnabled = true;
+    } catch (e) {
+        console.error('Erro ao inicializar áudio:', e);
+        audioEnabled = false;
     }
 }
 
-function verificarResposta() {
-    if (!jogoIniciado) return;
-
-    const playerAnswer = parseInt(respostaInput.value);
-
-    if (playerAnswer === correctAnswer) {
-        successSound.play();
-        confetti({
-            particleCount: 100,
-            spread: 70,
-            origin: { y: 0.6 }
-        });
-        pontuacao += 10;
-        atualizarPontuacao();
-        gerarProblema();
-        respostaInput.value = '';
+function criarProblema() {
+    if (numerosMostrados < TOTAL_NUMEROS) {
+        resultado = gerarNumeroAleatorio(-10, 10);
+        sequencia.push(resultado);
+        const displayNumber = resultado > 0 ? `+${resultado}` : resultado;
+        document.getElementById('problema').textContent = displayNumber;
+        
+        if (audioEnabled) {
+            const beep = document.getElementById('beep');
+            beep.currentTime = 0;
+            beep.play().catch(e => console.log('Erro no beep:', e));
+        }
+        
+        numerosMostrados++;
     } else {
-        errorSound.play();
-        respostaInput.classList.add('error');
-        setTimeout(() => respostaInput.classList.remove('error'), 500);
-        chances--; // Decrement chances
-        updateChancesDisplay();
+        clearInterval(intervalId);
+        document.getElementById('problema').textContent = "?";
+        document.getElementById('resposta').focus();
+        aguardandoResposta = true;
+    }
+}
 
-        if (chances === 0) {
-            gameOver();
+function iniciarJogo() {
+    criarProblema();
+    intervalId = setInterval(criarProblema, velocidade);
+}
+
+function iniciarNovaSequencia() {
+    numerosMostrados = 0;
+    sequencia = [];
+    aguardandoResposta = false;
+    iniciarJogo();
+}
+
+function celebrar() {
+    if (audioEnabled) {
+        const success = document.getElementById('success');
+        success.currentTime = 0;
+        success.play().catch(e => console.log('Erro no som de sucesso:', e));
+    }
+    confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+    });
+}
+
+function mostrarErro() {
+    if (audioEnabled) {
+        const error = document.getElementById('error');
+        error.currentTime = 0;
+        error.play().catch(e => console.log('Erro no som de erro:', e));
+    }
+    document.querySelector('.container').classList.add('error');
+    setTimeout(() => {
+        document.querySelector('.container').classList.remove('error');
+    }, 500);
+}
+
+document.getElementById('resposta').addEventListener('keyup', function(event) {
+    if (event.key === 'Enter' && aguardandoResposta) {
+        const resposta = parseInt(this.value);
+        const somaCorreta = sequencia.reduce((a, b) => a + b, 0);
+        
+        if (resposta === somaCorreta) {
+            pontos++;
+            document.getElementById('pontuacao').textContent = `Pontos: ${pontos}`;
+            this.value = '';
+            this.placeholder = 'Correto!';
+            celebrar();
+            setTimeout(() => {
+                this.placeholder = '?';
+                iniciarNovaSequencia();
+            }, 1000);
+        } else {
+            this.value = '';
+            this.placeholder = 'Tente novamente!';
+            mostrarErro();
+            setTimeout(() => {
+                this.placeholder = '?';
+                iniciarNovaSequencia();
+            }, 1000);
         }
     }
-}
+});
 
-function updateChancesDisplay() {
-    chancesDisplay.innerText = `Chances Left: ${chances}`;
-}
+// Substituir window.onload
+window.onload = function() {
+    const startButton = document.getElementById('startButton');
+    const problema = document.getElementById('problema');
+    const resposta = document.getElementById('resposta');
 
-function gameOver() {
-    problemaDiv.innerText = `Game Over! A resposta correta era ${correctAnswer}.`;
-    respostaInput.disabled = true;
-    jogoIniciado = false;
-    startButton.innerText = 'Reiniciar Jogo';
-    startButton.style.display = 'block';
-}
-
-startButton.addEventListener('click', () => {
-    beepSound.play();
-    if (!jogoIniciado) {
-        pontuacao = 0;
-        chances = 2; // Reset chances
-        updateChancesDisplay();
-        atualizarPontuacao();
-        gerarProblema();
-        respostaInput.disabled = false;
-        respostaInput.value = '';
+    startButton.addEventListener('click', async function() {
+        await inicializarAudio();
         startButton.style.display = 'none';
-        jogoIniciado = true;
-    }
-});
+        problema.style.display = 'block';
+        resposta.style.display = 'block';
+        iniciarJogo();
+    });
+};
 
-respostaInput.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter') {
-        verificarResposta();
-    }
-});
+// Example: Assuming you have a function that ends a round
+function endRound() {
+    // ... lógica de término de rodada (por exemplo, verificar se o jogo acabou, atualizar pontuação) ...
 
-updateChancesDisplay(); // Initialize the display
+    // Tornar o botão de início visível novamente
+    const startButton = document.getElementById('startButton');
+    startButton.style.display = 'block'; // Ou 'inline', dependendo do seu layout
+}
+
+// Example:  No seu manipulador de clique do botão de início:
+startButton.addEventListener('click', function() {
+    startButton.style.display = 'none'; // Ocultar o botão quando o jogo começar
+    startGame(); // Sua função para iniciar o jogo
+});

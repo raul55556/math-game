@@ -1,15 +1,12 @@
 {
   "name": "math-game",
   "version": "1.0.0",
-  "description": "A simple game that displays addition and subtraction numbers quickly.",
-  "main": "src/index.js",
+  "description": "Jogo de matemática",
+  "main": "game.js",
   "scripts": {
-    "start": "node src/index.js",
-    "test": "echo \"No tests specified\" && exit 0"
+    "start": "serve ."
   },
   "dependencies": {
-    "express": "^4.17.1"
-  },
-  "author": "Your Name",
-  "license": "ISC"
+    "serve": "^14.2.1"
+  }
 }
