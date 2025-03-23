@@ -31,11 +31,10 @@
             color: #2ecc71;
         }
         .error {
-            background-color: #ff0000; /* Full red */
-            animation: shake 0.5s;
+            background-color: #ff0000;
         }
         .success {
-            background-color: #00ff00; /* Full green */
+            background-color: #00ff00;
         }
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
@@ -63,10 +62,10 @@
         <div id="pontuacao">Pontos: 0</div>
         <button id="restartButton">Recomeçar Jogo</button>
     </div>
-    <audio id="beep" src="./sounds/beep.mp3"></audio>
-    <audio id="success" src="./sounds/success.mp3"></audio>
-    <audio id="error" src="./sounds/error.mp3"></audio>
+    <audio id="beep" src="sounds/beep.mp3"></audio>
+    <audio id="success" src="sounds/success.mp3"></audio>
+    <audio id="error" src="sounds/error.mp3"></audio>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
-    <script src="./game.js"></script>
+    <script src="game.js"></script>
 </body>
 </html>
